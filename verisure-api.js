@@ -204,8 +204,11 @@ function parseClimateData ( data ) {
  */
 function parseSmartplugData(data) {
 	'use strict';
-	//TODO: Data map
 	
+	data = data.map( function (dataSet){
+		return filterByKeys( dataSet, config.smartplugFields );
+	});
+
 	console.log(data);
 	setTimout(pollSmartplugData, smartplugFetchTimeout);
 
