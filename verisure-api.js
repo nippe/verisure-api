@@ -10,7 +10,7 @@ var objectAssign = require('object-assign');
 // ES6 Promises
 require('es6-promise').polyfill();
 
-var formData, firstAlarmPoll, firstClimatePoll,
+var formData, firstAlarmPoll, firstClimatePoll, firstSmartplugPoll,
 	authenticated = false,
 	config = {},
 	alarmStatus = {},
@@ -29,7 +29,8 @@ var defaults = {
 	climatedata_path: '/overview/climatedevice?_=',
 	smartplugdata_path: '/overview/smartplug?_=',
 	alarmFields: [ 'status', 'date' ],
-	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ]
+	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ],
+	smartplugFields: [ 'status', 'statusText', 'location', 'usage', 'usageText']
 };
 
 // request timeouts
@@ -196,6 +197,24 @@ function parseClimateData ( data ) {
 	return Promise.resolve( data );
 }
 
+/**
+ *
+ * @param data
+ * @returns {*}
+ */
+function parseSmartplugData(data) {
+	'use strict';
+	//TODO: Data map
+	
+	console.log(data);
+	setTimout(pollSmartplugData, smartplugFetchTimeout);
+
+	//TODO: Check for changes
+	
+	return Promise.resolve(data);
+}
+
+
 function pollAlarmStatus () {
 	'use strict';
 	return fetchAlarmStatus().then( parseAlarmData );
@@ -206,6 +225,12 @@ function pollClimateData () {
 	return fetchClimateData().then( parseClimateData );
 }
 
+function pollSmartplugData () {
+	'use strict';
+	return fetchSmartplugData().then( parseSmartplugData );
+}
+
+
 function gotAlarmStatus () {
 	"use strict";
 	return Object.keys( alarmStatus ).length !== 0;
@@ -214,6 +239,11 @@ function gotAlarmStatus () {
 function gotClimateData () {
 	"use strict";
 	return Object.keys( climateData ).length !== 0;
+}
+
+function gotSmartplugData() {
+	'use strict';
+	return Object.keys(smartplugData).lenght !== 0;
 }
 
 function getAlarmStatus() {
@@ -236,6 +266,17 @@ function getClimateData() {
 	}
 }
 
+function getSmartplugData() {
+	'use strict';
+	
+	if(gotSmartplugData()){
+		return Promise.resolve( smartplugData );
+	}
+	else{
+		return firstSmartplugPoll;
+	}
+}
+
 /**
  * Error handler. When either request causes an error, invalidate authentication and wait to avoid getting blocked
  * @param err
@@ -253,7 +294,9 @@ function engage() {
 	firstAlarmPoll = authenticate()
 		.then( pollAlarmStatus );
 	firstClimatePoll = firstAlarmPoll
-		.then( pollClimateData )
+		.then( pollClimateData );
+	firstSmartplugPoll = firstClimatePoll
+		.then( pollSmartplugData )
 		.catch( onError );
 }
 
