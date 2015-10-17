@@ -27,6 +27,7 @@ var defaults = {
 	auth_path: '/j_spring_security_check?locale=sv_SE',
 	alarmstatus_path: '/remotecontrol?_=',
 	climatedata_path: '/overview/climatedevice?_=',
+	smartplugdata_path: '/overview/smartplug?_=',
 	alarmFields: [ 'status', 'date' ],
 	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ]
 };
@@ -34,6 +35,7 @@ var defaults = {
 // request timeouts
 var alarmFetchTimeout = 30 * 1000,			// 0.5 min
 	climateFetchTimeout = 30 * 60 * 1000, 	// 30 min
+	smartplugFetchTimeout = 15 * 60 * 1000 // 15 min
 	errorTimeout = 10 * 60 * 1000; 			// 10 min
 
 // enabling cookies
@@ -140,6 +142,17 @@ function fetchClimateData () {
 
 	var climatedata_url = config.domain + config.climatedata_path + Date.now();
 	return requestPromise({ url: climatedata_url, json: true });
+}
+
+/**
+ *
+ * @returns {Promise}
+ */
+function fetchSmartplugData() {
+	'use strict';
+
+	var smartplugdata_url = config.domain + config.smartplugdata_path + Date.now();
+	return requestPromise({ url: smartplugdata_url, json: true});
 }
 
 /**
