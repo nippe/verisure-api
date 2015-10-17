@@ -15,9 +15,11 @@ var formData, firstAlarmPoll, firstClimatePoll, firstSmartplugPoll,
 	config = {},
 	alarmStatus = {},
 	climateData = {},
+	smartplugData = {},
 	listeners = {
 		climateChange: [],
-		alarmChange: []
+		alarmChange: [],
+		smartplugChange: []
 	};
 
 var defaults = {
@@ -151,7 +153,6 @@ function fetchClimateData () {
  */
 function fetchSmartplugData() {
 	'use strict';
-
 	var smartplugdata_url = config.domain + config.smartplugdata_path + Date.now();
 	return requestPromise({ url: smartplugdata_url, json: true});
 }
@@ -204,17 +205,18 @@ function parseClimateData ( data ) {
  */
 function parseSmartplugData(data) {
 	'use strict';
-	
+
 	data = data.map( function (dataSet){
 		return filterByKeys( dataSet, config.smartplugFields );
 	});
 
-	console.log(data);
-	setTimout(pollSmartplugData, smartplugFetchTimeout);
+	setTimeout(pollSmartplugData, smartplugFetchTimeout);
 
-	//TODO: Check for changes
-	
-	return Promise.resolve(data);
+	if(JSON.stringify( data ) !== JSON.stringify( smartplugData ) )	{
+		smartplugData = data;
+		dispatch( 'smartplugChange', data );
+	}
+	return Promise.resolve( data );
 }
 
 
@@ -246,7 +248,7 @@ function gotClimateData () {
 
 function gotSmartplugData() {
 	'use strict';
-	return Object.keys(smartplugData).lenght !== 0;
+	return Object.keys(smartplugData).length !== 0;
 }
 
 function getAlarmStatus() {
@@ -271,8 +273,7 @@ function getClimateData() {
 
 function getSmartplugData() {
 	'use strict';
-	
-	if(gotSmartplugData()){
+	if( gotSmartplugData() ){
 		return Promise.resolve( smartplugData );
 	}
 	else{
@@ -334,6 +335,10 @@ var publicApi = {
 		} else if ( service === 'climateChange' && gotClimateData() ) {
 			callback( climateData );
 		}
+		else if( service === 'smartplugChange' && gotSmartplugData() ) {
+			callback( smartplugData );
+		}
+
 	},
 
 	/**
@@ -373,8 +378,11 @@ var publicApi = {
 		if ( service === 'climateData' ) {
 			return getClimateData();
 		}
+		if ( service === 'smartplugData' ) {
+			return getSmartplugData();
+		}
 
-		return Promise.reject( 'No such service! Use alarmStatus or climateData' );
+		return Promise.reject( 'No such service! Use alarmStatus, climateData or smartplugData' );
 	}
 };
 
