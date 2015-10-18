@@ -89,7 +89,7 @@ function requestPromise ( options ) {
 	return new Promise( function ( resolve, reject ) {
 		request( options, function requestCallback( error, response, body ) {
 			// handle response errors
-			if ( options.json && response.headers['content-type'] !== 'application/json;charset=UTF-8' ) {
+			if ( options.json && response && response.headers['content-type'] !== 'application/json;charset=UTF-8' ) {
 				error = { state: 'error', message: 'Expected JSON, but got html' };
 			} else if ( body.state === 'error' )	{
 				error = body;
