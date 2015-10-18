@@ -5,7 +5,6 @@ creating a basic module to poll verisure api to be able to trigger home automati
 
 Usage:
 
-```
     var config = {
 	    username: 'yourverisure@email.com',
 	    password: 'yourverisurepassword'
@@ -21,10 +20,9 @@ Usage:
     // climate measurement changes
     verisureApi.on( 'climateChange', log );
 
-		//Smartplug Changes
-		verisureApi.on(‘smartplugChange’, log);
+	//Smartplug Changes
+	verisureApi.on(‘smartplugChange’, log);
 
     function log ( data ) {
     	console.log( data );
     }
-```
