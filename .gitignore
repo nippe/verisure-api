@@ -7,4 +7,6 @@ config.js
 
 npm-debug.log
 
+*.swp
+
 test.js
