@@ -20,6 +20,9 @@ Usage:
     // climate measurement changes
     verisureApi.on( 'climateChange', log );
 
+	//Smartplug Changes
+	verisureApi.on(‘smartplugChange’, log);
+
     function log ( data ) {
     	console.log( data );
     }

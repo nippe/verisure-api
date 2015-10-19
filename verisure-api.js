@@ -10,14 +10,16 @@ var objectAssign = require('object-assign');
 // ES6 Promises
 require('es6-promise').polyfill();
 
-var formData, firstAlarmPoll, firstClimatePoll,
+var formData, firstAlarmPoll, firstClimatePoll, firstSmartplugPoll,
 	authenticated = false,
 	config = {},
 	alarmStatus = {},
 	climateData = {},
+	smartplugData = {},
 	listeners = {
 		climateChange: [],
-		alarmChange: []
+		alarmChange: [],
+		smartplugChange: []
 	};
 
 var defaults = {
@@ -27,13 +29,16 @@ var defaults = {
 	auth_path: '/j_spring_security_check?locale=sv_SE',
 	alarmstatus_path: '/remotecontrol?_=',
 	climatedata_path: '/overview/climatedevice?_=',
+	smartplugdata_path: '/overview/smartplug?_=',
 	alarmFields: [ 'status', 'date' ],
-	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ]
+	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ],
+	smartplugFields: [ 'status', 'statusText', 'location', 'usage', 'usageText']
 };
 
 // request timeouts
 var alarmFetchTimeout = 30 * 1000,			// 0.5 min
 	climateFetchTimeout = 30 * 60 * 1000, 	// 30 min
+	smartplugFetchTimeout = 15 * 60 * 1000 // 15 min
 	errorTimeout = 10 * 60 * 1000; 			// 10 min
 
 // enabling cookies
@@ -84,7 +89,7 @@ function requestPromise ( options ) {
 	return new Promise( function ( resolve, reject ) {
 		request( options, function requestCallback( error, response, body ) {
 			// handle response errors
-			if ( options.json && response.headers['content-type'] !== 'application/json;charset=UTF-8' ) {
+			if ( options.json && response && response.headers['content-type'] !== 'application/json;charset=UTF-8' ) {
 				error = { state: 'error', message: 'Expected JSON, but got html' };
 			} else if ( body.state === 'error' )	{
 				error = body;
@@ -144,6 +149,16 @@ function fetchClimateData () {
 
 /**
  *
+ * @returns {Promise}
+ */
+function fetchSmartplugData() {
+	'use strict';
+	var smartplugdata_url = config.domain + config.smartplugdata_path + Date.now();
+	return requestPromise({ url: smartplugdata_url, json: true});
+}
+
+/**
+ *
  * @param data
  * @returns {*}
  */
@@ -183,6 +198,28 @@ function parseClimateData ( data ) {
 	return Promise.resolve( data );
 }
 
+/**
+ *
+ * @param data
+ * @returns {*}
+ */
+function parseSmartplugData(data) {
+	'use strict';
+
+	data = data.map( function (dataSet){
+		return filterByKeys( dataSet, config.smartplugFields );
+	});
+
+	setTimeout(pollSmartplugData, smartplugFetchTimeout);
+
+	if(JSON.stringify( data ) !== JSON.stringify( smartplugData ) )	{
+		smartplugData = data;
+		dispatch( 'smartplugChange', data );
+	}
+	return Promise.resolve( data );
+}
+
+
 function pollAlarmStatus () {
 	'use strict';
 	return fetchAlarmStatus().then( parseAlarmData );
@@ -193,6 +230,12 @@ function pollClimateData () {
 	return fetchClimateData().then( parseClimateData );
 }
 
+function pollSmartplugData () {
+	'use strict';
+	return fetchSmartplugData().then( parseSmartplugData );
+}
+
+
 function gotAlarmStatus () {
 	"use strict";
 	return Object.keys( alarmStatus ).length !== 0;
@@ -201,6 +244,11 @@ function gotAlarmStatus () {
 function gotClimateData () {
 	"use strict";
 	return Object.keys( climateData ).length !== 0;
+}
+
+function gotSmartplugData() {
+	'use strict';
+	return Object.keys(smartplugData).length !== 0;
 }
 
 function getAlarmStatus() {
@@ -223,6 +271,16 @@ function getClimateData() {
 	}
 }
 
+function getSmartplugData() {
+	'use strict';
+	if( gotSmartplugData() ){
+		return Promise.resolve( smartplugData );
+	}
+	else{
+		return firstSmartplugPoll;
+	}
+}
+
 /**
  * Error handler. When either request causes an error, invalidate authentication and wait to avoid getting blocked
  * @param err
@@ -240,7 +298,9 @@ function engage() {
 	firstAlarmPoll = authenticate()
 		.then( pollAlarmStatus );
 	firstClimatePoll = firstAlarmPoll
-		.then( pollClimateData )
+		.then( pollClimateData );
+	firstSmartplugPoll = firstClimatePoll
+		.then( pollSmartplugData )
 		.catch( onError );
 }
 
@@ -275,6 +335,10 @@ var publicApi = {
 		} else if ( service === 'climateChange' && gotClimateData() ) {
 			callback( climateData );
 		}
+		else if( service === 'smartplugChange' && gotSmartplugData() ) {
+			callback( smartplugData );
+		}
+
 	},
 
 	/**
@@ -314,8 +378,11 @@ var publicApi = {
 		if ( service === 'climateData' ) {
 			return getClimateData();
 		}
+		if ( service === 'smartplugData' ) {
+			return getSmartplugData();
+		}
 
-		return Promise.reject( 'No such service! Use alarmStatus or climateData' );
+		return Promise.reject( 'No such service! Use alarmStatus, climateData or smartplugData' );
 	}
 };
 
