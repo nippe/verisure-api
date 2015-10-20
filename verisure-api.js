@@ -154,7 +154,7 @@ function fetchClimateData () {
 function fetchSmartplugData() {
 	'use strict';
 	var smartplugdata_url = config.domain + config.smartplugdata_path + Date.now();
-	return requestPromise({ url: smartplugdata_url, json: true});
+	return requestPromise({ url: smartplugdata_url, json: true });
 }
 
 /**
@@ -248,7 +248,7 @@ function gotClimateData () {
 
 function gotSmartplugData() {
 	'use strict';
-	return Object.keys(smartplugData).length !== 0;
+	return Object.keys( smartplugData ).length !== 0;
 }
 
 function getAlarmStatus() {
@@ -318,7 +318,7 @@ var publicApi = {
 		"use strict";
 
 		if ( !listeners[ service ] ) {
-			return new Error( 'No such service! Subscribe to alarmChange or climateChange!' );
+			return new Error( 'No such service! Subscribe to alarmChange, climateChange or smartplugChange!' );
 		}
 
 		if ( typeof callback !== 'function' ) {
