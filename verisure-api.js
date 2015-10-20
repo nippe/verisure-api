@@ -38,7 +38,7 @@ var defaults = {
 // request timeouts
 var alarmFetchTimeout = 30 * 1000,			// 0.5 min
 	climateFetchTimeout = 30 * 60 * 1000, 	// 30 min
-	smartplugFetchTimeout = 15 * 60 * 1000 // 15 min
+	smartplugFetchTimeout = 15 * 60 * 1000, // 15 min
 	errorTimeout = 10 * 60 * 1000; 			// 10 min
 
 // enabling cookies
