@@ -165,7 +165,14 @@ function fetchSmartplugData() {
 function parseAlarmData ( data ) {
 	"use strict";
 
-	data = filterByKeys( data[ 0 ], config.alarmFields );
+	// Find the alarm status object (filter out any lock status objects)
+  if ( Array.isArray ( data )) {
+    data = data.find(function(obj){
+      return obj.type == 'ARM_STATE'
+    });
+  }
+
+  data = filterByKeys( data, config.alarmFields );
 
 	setTimeout( pollAlarmStatus, alarmFetchTimeout );
 
