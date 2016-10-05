@@ -29,7 +29,7 @@ var defaults = {
 	auth_path: '/j_spring_security_check?locale=sv_SE',
 	alarmstatus_path: '/remotecontrol?_=',
 	climatedata_path: '/overview/climatedevice?_=',
-	smartplugdata_path: '/overview/smartplug?_=',
+	smartplugdata_path: '/settings/smartplug?_=',
 	alarmFields: [ 'status', 'date' ],
 	climateFields: [ 'location', 'humidity', 'temperature', 'timestamp' ],
 	smartplugFields: [ 'status', 'statusText', 'location', 'usage', 'usageText']
@@ -296,7 +296,12 @@ function onError ( err ) {
 	'use strict';
 
 	setTimeout( engage, errorTimeout );
-	config.onError( err );
+	if(config && config.onError){
+		config.onError( err );
+	} else {
+		console.log(err);
+	}
+
 }
 
 function engage() {
