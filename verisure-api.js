@@ -88,7 +88,13 @@ function requestPromise ( options ) {
 	'use strict';
 	return new Promise( function ( resolve, reject ) {
 		request( options, function requestCallback( error, response, body ) {
-			// handle response errors
+
+      // Reject if the callback is in error
+      if (error) {
+        return reject(error);
+      }
+
+      // handle response errors
 			if ( options.json && response && response.headers['content-type'] !== 'application/json;charset=UTF-8' ) {
 				error = { state: 'error', message: 'Expected JSON, but got html' };
 			} else if ( body.state === 'error' )	{
@@ -296,12 +302,11 @@ function onError ( err ) {
 	'use strict';
 
 	setTimeout( engage, errorTimeout );
-	if(config && config.onError){
-		config.onError( err );
-	} else {
-		console.log(err);
-	}
 
+  // If a error call back has been supplied, call it.
+  if ( config.onError ) {
+    config.onError( err );
+  }
 }
 
 function engage() {
