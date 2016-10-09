@@ -302,7 +302,11 @@ function onError ( err ) {
 	'use strict';
 
 	setTimeout( engage, errorTimeout );
-	config.onError( err );
+
+  // If a error call back has been supplied, call it.
+  if ( config.onError ) {
+    config.onError( err );
+  }
 }
 
 function engage() {
